@@ -19,9 +19,9 @@ Besides this one, there should be a database called dwh
 
 ### Create a docker container and execute tests
 
-Install (git clone)
+Install (git clone) this repo
 
-- https://github.com/puckel/docker-airflow
+- https://github.com/nunobbras/airflow_for_bi
 
 
 
