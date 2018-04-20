@@ -103,7 +103,7 @@ Go to Data Profiling and use Ad Hoc Query. Make a query you know it returns valu
 testing version
 
 ```
-docker exec -it dockerairflow_webserver_1 airflow test process_dimensions process_salaries_dim 1999-12-30
+docker exec -it dockerairflow_webserver_1 airflow test get_salaries process_salaries_dim 1999-12-30
 ```
 
 ### If needed, files could be changed inside the docker container using
@@ -112,13 +112,19 @@ docker exec -it dockerairflow_webserver_1 airflow test process_dimensions proces
 docker cp ./airflow/config/airflow.cfg dockerairflow_webserver_1:/usr/local/airflow
 ```
 
+### Create a DAG to copy new data to the dwh database
+
+Use the dag in file 
+
+
+```
+docker exec -it dockerairflow_webserver_1 airflow test process_salaries process_salaries_dim 1999-12-30
+```
+
+
+
 
 ### Create a DAG to schedule automatic data injection in OLTP 
-
-
-
-
-### Create a DAG to copy new data to the dwh database
 
 
 
