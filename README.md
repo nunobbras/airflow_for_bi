@@ -24,8 +24,13 @@ Install (git clone) this repo
 - https://github.com/nunobbras/airflow_for_bi
 
 
-
 ### Test your docker installation 
+
+Docker Build
+
+```
+-t puckel/docker-airflow
+```
 
 Create containers and keep them alive, restart and delete them
 
