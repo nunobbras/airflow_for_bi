@@ -3,7 +3,7 @@
 from __future__ import print_function
 from airflow import DAG, utils
 from datetime import datetime, timedelta
-from etl.operators.dwh_operators import MysqlOperatorWithTemplatedParams
+from etl.operators.dwh_operators import MysqlToMysqlOperator
 from airflow.models import Variable
 
 args = {
@@ -16,7 +16,7 @@ args = {
 tmpl_search_path = Variable.get("sql_template_paths")
 
 dag = DAG(
-    'get_salaries',
+    'process_salaries',
     schedule_interval="@daily",
     dagrun_timeout=timedelta(minutes=60),
     template_searchpath=tmpl_search_path,
@@ -25,13 +25,17 @@ dag = DAG(
 )
 
 
-process_salaries_dim = MysqlOperatorWithTemplatedParams(
-    task_id='process_salaries_dim',
-    mysql_conn_id='mysql_oltp',
+process_salaries_dim = MysqlToMysqlOperator(
     sql='select_salaries.sql',
+    dest_table='staging.salaries',
+    src_mysql_conn_id='mysql_oltp',
+    dest_mysqls_conn_id='mysql_dwh',
+    pg_preoperator="DELETE FROM staging.salaries WHERE from_date >= DATE '{{ ds }}' AND to_date < DATE '{{ tomorrow_ds }}'",
     parameters={"window_start_date": "{{ ds }}",
                 "window_end_date": "{{ tomorrow_ds }}"},
-    dag=dag)
+    task_id='extract_salaries',
+    dag=dag,
+    pool='mysql_dwh')
 
 
 if __name__ == "__main__":

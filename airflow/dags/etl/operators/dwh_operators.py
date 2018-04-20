@@ -36,8 +36,8 @@ class MysqlToMysqlOperator(BaseOperator):
     :type parameters: dict
     """
 
-    template_fields = ('sql', 'parameters', 'pg_table',
-                       'pg_preoperator', 'pg_postoperator')
+    template_fields = ('sql', 'parameters', 'dest_table',
+                       'mysql_preoperator', 'mysql_postoperator')
     template_ext = ('.sql',)
     ui_color = '#ededed'
 
@@ -45,20 +45,20 @@ class MysqlToMysqlOperator(BaseOperator):
     def __init__(
             self,
             sql,
-            pg_table,
+            dest_table,
             src_mysql_conn_id='mysql_oltp',
             dest_mysqls_conn_id='mysql_dwh',
-            pg_preoperator=None,
-            pg_postoperator=None,
+            mysql_preoperator=None,
+            mysql_postoperator=None,
             parameters=None,
             *args, **kwargs):
         super(MysqlToMysqlOperator, self).__init__(*args, **kwargs)
         self.sql = sql
-        self.pg_table = pg_table
+        self.dest_table = dest_table
         self.src_mysql_conn_id = src_mysql_conn_id
         self.dest_mysqls_conn_id = dest_mysqls_conn_id
-        self.pg_preoperator = pg_preoperator
-        self.pg_postoperator = pg_postoperator
+        self.mysql_preoperator = mysql_preoperator
+        self.mysql_postoperator = mysql_postoperator
         self.parameters = parameters
 
     def execute(self, context):
@@ -72,17 +72,17 @@ class MysqlToMysqlOperator(BaseOperator):
         cursor = conn.cursor()
         cursor.execute(self.sql, self.parameters)
 
-        if self.pg_preoperator:
+        if self.mysql_preoperator:
             logging.info("Running Mysql preoperator")
-            dest_pg.run(self.pg_preoperator)
+            dest_pg.run(self.mysql_preoperator)
 
         logging.info("Inserting rows into Mysql")
 
-        dest_pg.insert_rows(table=self.pg_table, rows=cursor)
+        dest_pg.insert_rows(table=self.dest_table, rows=cursor)
 
-        if self.pg_postoperator:
+        if self.mysql_postoperator:
             logging.info("Running Mysql postoperator")
-            dest_pg.run(self.pg_postoperator)
+            dest_pg.run(self.mysql_postoperator)
 
         logging.info("Done.")
 
