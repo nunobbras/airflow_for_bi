@@ -63,26 +63,31 @@ class MysqlToMysqlOperator(BaseOperator):
 
     def execute(self, context):
         logging.info('Executing: ' + str(self.sql))
-        src_pg = MySqlHook(mysql_conn_id=self.src_mysql_conn_id)
-        dest_pg = MySqlHook(mysql_conn_id=self.dest_mysqls_conn_id)
+        src_mysql = MySqlHook(mysql_conn_id=self.src_mysql_conn_id)
+        dest_mysql = MySqlHook(mysql_conn_id=self.dest_mysqls_conn_id)
 
         logging.info(
             "Transferring Mysql query results into other Mysql database.")
-        conn = src_pg.get_conn()
+        conn = src_mysql.get_conn()
         cursor = conn.cursor()
         cursor.execute(self.sql, self.parameters)
 
         if self.mysql_preoperator:
             logging.info("Running Mysql preoperator")
-            dest_pg.run(self.mysql_preoperator)
+            dest_mysql.run(self.mysql_preoperator)
 
-        logging.info("Inserting rows into Mysql")
-
-        dest_pg.insert_rows(table=self.dest_table, rows=cursor)
+        if cursor.rowcount != 0:
+            logging.info("Inserting rows into Mysql")
+            for i, row in enumerate(cursor):
+                print("row", row)
+            dest_mysql.insert_rows(table=self.dest_table, rows=cursor)
+            logging.info(cursor.rowcount, " rows inserted")
+        else:
+            logging.info("No rows inserted")
 
         if self.mysql_postoperator:
             logging.info("Running Mysql postoperator")
-            dest_pg.run(self.mysql_postoperator)
+            dest_mysql.run(self.mysql_postoperator)
 
         logging.info("Done.")
 

@@ -14,6 +14,7 @@ mysql -t < employees.sql
 ```
 
 confirm the employee database creation in MyQSL.
+Besides this one, there should be a database called dwh
 
 
 ### Create a docker container and execute tests
@@ -114,14 +115,11 @@ docker cp ./airflow/config/airflow.cfg dockerairflow_webserver_1:/usr/local/airf
 
 ### Create a DAG to copy new data to the dwh database
 
-Use the dag in file 
-
+Use the dag in file `process_salaries` and don't forget to create a similar table `employees` in dwh database; 
 
 ```
-docker exec -it dockerairflow_webserver_1 airflow test process_salaries process_salaries_dim 1999-12-30
+docker exec -it dockerairflow_webserver_1 airflow test process_salaries extract_salaries 1999-1-30
 ```
-
-
 
 
 ### Create a DAG to schedule automatic data injection in OLTP 

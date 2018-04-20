@@ -27,10 +27,10 @@ dag = DAG(
 
 process_salaries_dim = MysqlToMysqlOperator(
     sql='select_salaries.sql',
-    dest_table='staging.salaries',
+    dest_table='dwh.salaries',
     src_mysql_conn_id='mysql_oltp',
     dest_mysqls_conn_id='mysql_dwh',
-    pg_preoperator="DELETE FROM staging.salaries WHERE from_date >= DATE '{{ ds }}' AND to_date < DATE '{{ tomorrow_ds }}'",
+    pg_preoperator="DELETE FROM dwh.salaries WHERE from_date >= DATE '{{ ds }}' AND to_date < DATE '{{ tomorrow_ds }}'",
     parameters={"window_start_date": "{{ ds }}",
                 "window_end_date": "{{ tomorrow_ds }}"},
     task_id='extract_salaries',
