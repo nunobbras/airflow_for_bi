@@ -4,6 +4,8 @@
 
 ### Install a Sample Database in MySQL 
 
+Install from database folder
+
 ```
 mysql --host=localhost --user=xxx --password=xxx
 ```

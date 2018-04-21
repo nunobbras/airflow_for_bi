@@ -26,7 +26,7 @@ dag = DAG(
 
 
 process_salaries_dim = MysqlOperatorWithTemplatedParams(
-    task_id='process_salaries_dim',
+    task_id='extract_salaries',
     mysql_conn_id='mysql_oltp',
     sql='select_salaries.sql',
     parameters={"window_start_date": "{{ ds }}",
