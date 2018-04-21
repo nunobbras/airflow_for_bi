@@ -21,13 +21,18 @@ Besides this one, there should be a database called dwh
 
 ### Create a docker container and execute tests
 
-Install (git clone)
+Install (git clone) this repo
 
-- https://github.com/puckel/docker-airflow
-
+- https://github.com/nunobbras/airflow_for_bi
 
 
 ### Test your docker installation 
+
+Docker Build
+
+```
+-t puckel/docker-airflow
+```
 
 Create containers and keep them alive, restart and delete them
 
@@ -106,7 +111,7 @@ Go to Data Profiling and use Ad Hoc Query. Make a query you know it returns valu
 testing version
 
 ```
-docker exec -it dockerairflow_webserver_1 airflow test get_salaries process_salaries_dim 1999-12-30
+docker exec -it dockerairflow_webserver_1 airflow test get_salaries extract_salaries 1999-12-30
 ```
 
 ### If needed, files could be changed inside the docker container using
