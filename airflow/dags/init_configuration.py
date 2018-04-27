@@ -26,17 +26,21 @@ def generate_config():
     session = Session()
 
     def create_new_conn(session, attributes):
-        new_conn = models.Connection()
-        new_conn.conn_id = attributes.get("conn_id")
-        new_conn.conn_type = attributes.get('conn_type')
-        new_conn.host = attributes.get('host')
-        new_conn.port = attributes.get('port')
-        new_conn.schema = attributes.get('schema')
-        new_conn.login = attributes.get('login')
-        new_conn.set_password(attributes.get('password'))
+        if Session.query(models.Connection).filter(models.Connection.conn_id == attributes.get("conn_id").count() == 0):
+            new_conn = models.Connection()
+            new_conn.conn_id = attributes.get("conn_id")
+            new_conn.conn_type = attributes.get('conn_type')
+            new_conn.host = attributes.get('host')
+            new_conn.port = attributes.get('port')
+            new_conn.schema = attributes.get('schema')
+            new_conn.login = attributes.get('login')
+            new_conn.set_password(attributes.get('password'))
 
-        session.add(new_conn)
-        session.commit()
+            session.add(new_conn)
+            session.commit()
+        else:
+            logging.info('Connection {} already exists'.format(
+                attributes.get("conn_id")))
 
     create_new_conn(session,
                     {"conn_id": "mysql_oltp",
@@ -92,7 +96,7 @@ def generate_config():
 
 
 dag = airflow.DAG(
-    'init_etl_example',
+    'init_configuration',
     schedule_interval="@once",
     default_args=args,
     max_active_runs=1)

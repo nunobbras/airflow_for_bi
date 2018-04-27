@@ -1,8 +1,9 @@
 # Tutorial for docker-container/ Airflow Docker /MySQL integration
-### Business Intelligence (UAL 2018)
+# Business Intelligence (UAL 2018)
 
+----
 
-### Install a Sample Database in MySQL 
+## Install a Sample Database in MySQL 
 
 Install from database folder
 
@@ -19,7 +20,7 @@ confirm the employee database creation in MyQSL.
 Besides this one, there should be a database called dwh
 
 
-### Create a docker container and execute tests
+## Create a docker container and execute tests
 
 Install (git clone) this repo
 
@@ -28,17 +29,16 @@ Install (git clone) this repo
 
 ### Test your docker installation 
 
-Docker Build
 
-```
-docker build --rm -t puckel/docker-airflow
-```
-
-Create containers and keep them alive, restart and delete them
+Create containers building the images at the same time (see Dockerfile) 
 
 ```
 docker-compose -f docker-compose-SequentialExecutor.yml up -d
+```
 
+and manage them (restart and delete them) if needed
+
+```
 docker-compose -f docker-compose-SequentialExecutor.yml restart
 
 docker-compose -f docker-compose-SequentialExecutor.yml down
@@ -55,7 +55,7 @@ docker-compose -f docker-compose-SequentialExecutor.yml run --rm webserver bash
 Check existent containers
 
 ```
-docker conatiner ls
+docker container ls
 ```
 
 Run in a specific container bash
@@ -63,6 +63,8 @@ Run in a specific container bash
 ```
 docker exec -it airflow_for_bi_webserver_1 bash
 ```
+> Note: check the name of the generated components: they could be different than `airflow_for_bi_XXX`
+
 
 Test a specific airflow function in docker
 
@@ -76,23 +78,24 @@ Execute through bash interactively a test (this will actually work!)
 ```
 docker exec -it airflow_for_bi_webserver_1 bash
 cd dags
-airflow test init_etl_example first_task 2015-06-01
+airflow test init_configuration first_task 2015-06-01
 
 ```
 
 execute remotely the same test
 
 ```
-docker exec -it airflow_for_bi_webserver_1 airflow test init_etl_example first_task 2015-06-01
+docker exec -it airflow_for_bi_webserver_1 airflow test init_configuration first_task 2015-06-01
 ```
 
 
-### Run a real DAG - configuration - just run Once!
+### Run a real DAG - configuration
 
 Create a Run manually (it could be done in the DAG webPage)
+This is the same DAG as before (init_configuration) but now we are running al the tasks, which includes second_task, that makes a airflow configuration (see the code of `init_configuration.py`)
 
 ```
-docker exec -it airflow_for_bi_webserver_1 airflow trigger_dag init_etl_example
+docker exec -it airflow_for_bi_webserver_1 airflow trigger_dag init_configuration
 ```
 
 Now you can see it ready to work to be fired in web server. We now have to run airflow scheduler to run available 

@@ -3,7 +3,7 @@
 from __future__ import print_function
 from airflow import DAG, utils
 from datetime import datetime, timedelta
-from etl.operators.dwh_operators import MysqlToMysqlOperator
+from etl.operators.dwh_operators import MysqlOperatorWithTemplatedParams
 from airflow.models import Variable
 
 args = {
@@ -15,8 +15,9 @@ args = {
 
 try:
     tmpl_search_path = Variable.get("sql_template_paths")
+
     dag = DAG(
-        'process_salaries',
+        'get_salaries',
         schedule_interval="@daily",
         dagrun_timeout=timedelta(minutes=60),
         template_searchpath=tmpl_search_path,
@@ -24,22 +25,17 @@ try:
         max_active_runs=1
     )
 
-    process_salaries_dim = MysqlToMysqlOperator(
+    process_salaries_dim = MysqlOperatorWithTemplatedParams(
+        task_id='extract_salaries',
+        mysql_conn_id='mysql_oltp',
         sql='select_salaries.sql',
-        dest_table='dwh.salaries',
-        src_mysql_conn_id='mysql_oltp',
-        dest_mysqls_conn_id='mysql_dwh',
-        pg_preoperator="DELETE FROM dwh.salaries WHERE from_date >= DATE '{{ ds }}' AND to_date < DATE '{{ tomorrow_ds }}'",
         parameters={"window_start_date": "{{ ds }}",
                     "window_end_date": "{{ tomorrow_ds }}"},
-        task_id='extract_salaries',
-        dag=dag,
-        pool='mysql_dwh')
+        dag=dag)
 
 except:
     print("warning: no sql_template_paths yet")
     tmpl_search_path = ""
-
 
 if __name__ == "__main__":
     dag.cli()
