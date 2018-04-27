@@ -14,6 +14,7 @@ services:
             - postgres
         environment:
             - LOAD_EX=n
+            - FERNET_KEY=WtcAFuSyNAeU3tMz5panc0M7gvwNP1tnej4hgo5Ysms=
             - EXECUTOR=Sequential
         volumes:
             - ./airflow/dags:/usr/local/airflow/dags

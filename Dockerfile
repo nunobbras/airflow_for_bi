@@ -59,7 +59,7 @@ RUN set -ex \
     && pip install pyOpenSSL \
     && pip install ndg-httpsclient \
     && pip install pyasn1 \
-    && pip install apache-airflow[postgres,jdbc,mysql]==$AIRFLOW_VERSION \
+    && pip install apache-airflow[crypto,postgres,jdbc,mysql]==$AIRFLOW_VERSION \
     && pip install psycopg2-binary \
     && apt-get purge --auto-remove -yqq $buildDeps \
     && apt-get autoremove -yqq --purge \

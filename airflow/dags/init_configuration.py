@@ -26,7 +26,7 @@ def generate_config():
     session = Session()
 
     def create_new_conn(session, attributes):
-        if Session.query(models.Connection).filter(models.Connection.conn_id == attributes.get("conn_id").count() == 0):
+        if Session.query(models.Connection).filter(models.Connection.conn_id == attributes.get("conn_id")).count() == 0:
             new_conn = models.Connection()
             new_conn.conn_id = attributes.get("conn_id")
             new_conn.conn_type = attributes.get('conn_type')
@@ -35,7 +35,6 @@ def generate_config():
             new_conn.schema = attributes.get('schema')
             new_conn.login = attributes.get('login')
             new_conn.set_password(attributes.get('password'))
-
             session.add(new_conn)
             session.commit()
         else:
@@ -78,19 +77,24 @@ def generate_config():
                      "login": "root",
                      "password": "nbras"})
 
-    new_var = models.Variable()
-    new_var.key = "sql_template_paths"
-    new_var.set_val("./sql_templates")
-    session.add(new_var)
-    session.commit()
+    if Session.query(models.Variable).filter(models.Variable.key == "sql_template_paths").count() == 0:
+        new_var = models.Variable()
+        new_var.key = "sql_template_paths"
+        new_var.set_val("./sql_templates")
+        session.add(new_var)
+        session.commit()
+    else:
+        logging.info('Variable sql_template_paths already exists')
 
-    new_pool = models.Pool()
-    new_pool.pool = "mysql_dwh"
-    new_pool.slots = 10
-    new_pool.description = "Allows max. 10 connections to the DWH"
-
-    session.add(new_pool)
-    session.commit()
+    if Session.query(models.Pool).filter(models.Pool.pool == "mysql_dwh").count() == 0:
+        new_pool = models.Pool()
+        new_pool.pool = "mysql_dwh"
+        new_pool.slots = 10
+        new_pool.description = "Allows max. 10 connections to the DWH"
+        session.add(new_pool)
+        session.commit()
+    else:
+        logging.info('Pool mysql_dwh already exists')
 
     session.close()
 
