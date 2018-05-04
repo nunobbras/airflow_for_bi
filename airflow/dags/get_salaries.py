@@ -3,7 +3,7 @@
 from __future__ import print_function
 from airflow import DAG, utils
 from datetime import datetime, timedelta
-from etl.operators.dwh_operators import MysqlOperatorWithTemplatedParams
+from etl.operators.dwh_operators import MysqlQueryOperatorWithTemplatedParams
 from airflow.models import Variable
 
 args = {
@@ -25,7 +25,7 @@ try:
         max_active_runs=1
     )
 
-    process_salaries_dim = MysqlOperatorWithTemplatedParams(
+    process_salaries_dim = MysqlQueryOperatorWithTemplatedParams(
         task_id='extract_salaries',
         mysql_conn_id='mysql_oltp',
         sql='select_salaries.sql',

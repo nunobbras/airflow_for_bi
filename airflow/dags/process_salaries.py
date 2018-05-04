@@ -24,15 +24,15 @@ try:
         max_active_runs=1
     )
 
-    process_salaries_dim = MysqlToMysqlOperator(
+    process_salaries_operator = MysqlToMysqlOperator(
         sql='select_salaries.sql',
-        dest_table='dwh.salaries',
+        dest_table='salaries',
         src_mysql_conn_id='mysql_oltp',
         dest_mysqls_conn_id='mysql_dwh',
-        pg_preoperator="DELETE FROM dwh.salaries WHERE from_date >= DATE '{{ ds }}' AND to_date < DATE '{{ tomorrow_ds }}'",
-        parameters={"window_start_date": "{{ ds }}",
-                    "window_end_date": "{{ tomorrow_ds }}"},
-        task_id='extract_salaries',
+        mysql_preoperator="DELETE FROM dwh.salaries WHERE from_date >= DATE '{{ ds }}' AND from_date < DATE '{{ tomorrow_ds }}'",
+        query_parameters={"window_start_date": "{{ ds }}",
+                          "window_end_date": "{{ tomorrow_ds }}"},
+        task_id='process_salaries_operator',
         dag=dag,
         pool='mysql_dwh')
 

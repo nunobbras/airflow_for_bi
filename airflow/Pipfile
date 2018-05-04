@@ -11,3 +11,6 @@ verify_ssl = true
 
 [packages]
 
+superset = "*"
+setuptools = "*"
+flask-appbuilder = "==1.9.6"

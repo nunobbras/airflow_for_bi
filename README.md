@@ -5,19 +5,33 @@
 
 ## Install a Sample Database in MySQL 
 
-Install from database folder
+Run from `database` folder:
 
 ```
-mysql --host=localhost --user=xxx --password=xxx
+mysql --host=localhost --user=xxx --password=xxx 
 ```
-exit and run
+
+and in mysql run
 
 ```
-mysql -t < employees.sql
+source employees.sql
 ```
+
 
 confirm the employee database creation in MyQSL.
-Besides this one, there should be a database called dwh
+
+Besides this one, there should be a database called dwh (Run from  `dwh` folder):
+
+```
+mysql --host=localhost --user=xxx --password=xxx 
+```
+
+and in mysql run
+
+```
+source salaries.sql
+```
+
 
 
 ## Create a docker container and execute tests
@@ -134,11 +148,97 @@ docker exec -it airflow_for_bi_webserver_1 airflow test process_salaries extract
 
 ### Create a DAG to schedule automatic data injection in OLTP 
 
+Let's use the DAG `inject_salaries` to generate data automatically in salaries table;
+
+For that to work you can start by testing it with 
+
+```
+docker exec -it airflow_for_bi_webserver_1 airflow test inject_salaries inject_salaries_operator 2015-01-01
+```
+
+This should generate an extra set of 10 rows of salaries for random employees for the month `2015-01`.
+
+You should now be able to start the scheduler and activate this task. Make it work 2 times per day; 
+Also, run previous dates (1 year) using airflow backfill, starting at 2017, using 
+
+```
+docker exec -it airflow_for_bi_webserver_1 airflow backfill inject_salaries -s 2017-05-01 -e 2018-05-01
+```
+
+
+
+### Generate a DAG to act upon newly arrived data
+
+Given this we should now import from OLTP to dwh from time to time. For that we have to build a DAG that import data from one place to another. For now we are building a simple scheduled DAG that will push data to the same `dwh`. 
+
+For that you should run twice per day the DAG `process_salaries`. Start by testing it with.
+
+```
+docker exec -it airflow_for_bi_webserver_1 airflow test process_salaries process_salaries_operator 1/5/2001
+```
+
+You can see now you have new data in the `dwh.salaries` database;
+
+
+# Starting with SUPERSET
+
+## Installation
+
+#### Install superset
+
+make
+
+```
+pip install superset
+pip install flask-appbuilder
+pip install ipython
+pip install mysqlclient
+pip install cryptography
+```
+
+#### Create an admin user (you will be prompted to set username, first and last name before setting a password)
+```
+fabmanager create-admin --app superset
+```
+
+#### Initialize the database
+```
+superset db upgrade
+```
+
+#### Load some data to play with
+```
+superset load_examples
+```
+
+#### Create default roles and permissions
+```
+superset init
+```
+
+To start a development web server on port 8088, use -p to bind to another port
+
+```
+superset runserver -d
+```
+
+
+
+----
+
+#### Explore Superset
+
+Create a connection to `dwh` in Sources > Databases
 
 
 
 
-### Generate sensors to act upon newly arrived data
+
+
+
+
+
+
 
 
 

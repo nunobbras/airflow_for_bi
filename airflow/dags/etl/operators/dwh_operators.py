@@ -21,22 +21,8 @@ from datetime import datetime
 
 
 class MysqlToMysqlOperator(BaseOperator):
-    """
-    Executes sql code in a Mysql database and inserts into another
 
-    :param src_mysql_conn_id: reference to the source mysql database
-    :type src_mysql_conn_id: string
-    :param dest_mysqls_conn_id: reference to the destination mysql database
-    :type dest_mysqls_conn_id: string
-    :param sql: the sql code to be executed
-    :type sql: Can receive a str representing a sql statement,
-        a list of str (sql statements), or reference to a template file.
-        Template reference are recognized by str ending in '.sql'
-    :param parameters: a parameters dict that is substituted at query runtime.
-    :type parameters: dict
-    """
-
-    template_fields = ('sql', 'parameters', 'dest_table',
+    template_fields = ('sql', 'query_parameters', 'dest_table',
                        'mysql_preoperator', 'mysql_postoperator')
     template_ext = ('.sql',)
     ui_color = '#ededed'
@@ -46,11 +32,11 @@ class MysqlToMysqlOperator(BaseOperator):
             self,
             sql,
             dest_table,
-            src_mysql_conn_id='mysql_oltp',
-            dest_mysqls_conn_id='mysql_dwh',
+            src_mysql_conn_id=None,
+            dest_mysqls_conn_id=None,
             mysql_preoperator=None,
             mysql_postoperator=None,
-            parameters=None,
+            query_parameters=None,
             *args, **kwargs):
         super(MysqlToMysqlOperator, self).__init__(*args, **kwargs)
         self.sql = sql
@@ -59,7 +45,7 @@ class MysqlToMysqlOperator(BaseOperator):
         self.dest_mysqls_conn_id = dest_mysqls_conn_id
         self.mysql_preoperator = mysql_preoperator
         self.mysql_postoperator = mysql_postoperator
-        self.parameters = parameters
+        self.query_parameters = query_parameters
 
     def execute(self, context):
         logging.info('Executing: ' + str(self.sql))
@@ -70,7 +56,7 @@ class MysqlToMysqlOperator(BaseOperator):
             "Transferring Mysql query results into other Mysql database.")
         conn = src_mysql.get_conn()
         cursor = conn.cursor()
-        cursor.execute(self.sql, self.parameters)
+        cursor.execute(self.sql, self.query_parameters)
 
         if self.mysql_preoperator:
             logging.info("Running Mysql preoperator")
@@ -81,7 +67,7 @@ class MysqlToMysqlOperator(BaseOperator):
             for i, row in enumerate(cursor):
                 print("row", row)
             dest_mysql.insert_rows(table=self.dest_table, rows=cursor)
-            logging.info(cursor.rowcount, " rows inserted")
+            logging.info(str(cursor.rowcount) + " rows inserted")
         else:
             logging.info("No rows inserted")
 
@@ -92,18 +78,7 @@ class MysqlToMysqlOperator(BaseOperator):
         logging.info("Done.")
 
 
-class MysqlOperatorWithTemplatedParams(BaseOperator):
-    """
-    Executes sql code in a specific Mysql database
-
-    :param mysql_conn_id: reference to a specific mysql database
-    :type mysql_conn_id: string
-    :param sql: the sql code to be executed
-    :type sql: Can receive a str representing a sql statement,
-        a list of str (sql statements), or reference to a template file.
-        Template reference are recognized by str ending in '.sql'
-    """
-
+class MysqlQueryOperatorWithTemplatedParams(BaseOperator):
     template_fields = ('sql', 'parameters')
     template_ext = ('.sql',)
     ui_color = '#ededed'
@@ -111,10 +86,11 @@ class MysqlOperatorWithTemplatedParams(BaseOperator):
     @apply_defaults
     def __init__(
             self, sql,
-            mysql_conn_id='mysql_dwh', autocommit=False,
+            mysql_conn_id='mysql_dwh',
+            autocommit=False,
             parameters=None,
             *args, **kwargs):
-        super(MysqlOperatorWithTemplatedParams,
+        super(MysqlQueryOperatorWithTemplatedParams,
               self).__init__(*args, **kwargs)
         self.sql = sql
         self.mysql_conn_id = mysql_conn_id
@@ -124,6 +100,56 @@ class MysqlOperatorWithTemplatedParams(BaseOperator):
     def execute(self, context):
         logging.info('Executing: ' + str(self.sql), self.parameters)
         self.hook = MySqlHook(mysql_conn_id=self.mysql_conn_id)
-        x = self.hook.get_records(self.sql,
-                                  parameters=self.parameters)
-        logging.info('Executed: ' + str(x))
+        data = self.hook.get_records(self.sql,
+                                     parameters=self.parameters)
+        #logging.info('Executed: ' + str(x))
+        return data
+
+
+class MysqlInsertOperator(BaseOperator):
+    template_fields = ('data_cursor', 'cursor', 'dest_table', 'dest_mysqls_conn_id',
+                       'mysql_preoperator', 'mysql_postoperator')
+    template_ext = ('.sql')
+    ui_color = '#ededed'
+
+    @apply_defaults
+    def __init__(
+            self,
+            dest_table,
+            data_cursor=None,
+            cursor=None,
+            dest_mysqls_conn_id=None,
+            mysql_postoperator=None,
+            mysql_preoperator=None,
+            *args, **kwargs):
+        super(MysqlInsertOperator,
+              self).__init__(*args, **kwargs)
+        self.dest_table = dest_table
+        self.dest_mysqls_conn_id = dest_mysqls_conn_id
+        self.mysql_preoperator = mysql_preoperator
+        self.mysql_postoperator = mysql_postoperator
+        self.cursor = cursor
+
+    def execute(self, context):
+        dest_mysql = MySqlHook(mysql_conn_id=self.dest_mysqls_conn_id)
+
+        self.cursor = self.cursor if not data_cursor else kwargs['ti'].xcom_pull(
+            key=None, task_ids=data_cursor)
+
+        logging.info(
+            "Transferring cursor into new Mysql database.")
+
+        if self.mysql_preoperator:
+            logging.info("Running Mysql preoperator")
+            dest_mysql.run(self.mysql_preoperator)
+
+            dest_mysql.insert_rows(table=self.dest_table, rows=self.cursor)
+            logging.info(self.cursor.rowcount, " rows inserted")
+        else:
+            logging.info("No rows inserted")
+
+        if self.mysql_postoperator:
+            logging.info("Running Mysql postoperator")
+            dest_mysql.run(self.mysql_postoperator)
+
+        logging.info("Done.")

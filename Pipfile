@@ -13,4 +13,7 @@ verify_ssl = true
 
 ipython = "*"
 apache-airflow = "*"
-cryptography = "*"
+flask-appbuilder = "*"
+superset = "*"
+mysqlclient = "*"
+
