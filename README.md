@@ -184,7 +184,11 @@ You can see now you have new data in the `dwh.salaries` database;
 
 ## Installation
 
-#### Install superset
+#### Run Superset as a docker container
+
+(included in the docker-compose file)
+
+#### You can also Install locally superset
 
 make
 
@@ -196,10 +200,20 @@ pip install mysqlclient
 pip install cryptography
 ```
 
+
+
 #### Create an admin user (you will be prompted to set username, first and last name before setting a password)
+```
+docker exec -it airflow_for_bi_superset_1 superset-init
+```
+
+if not using docker container make 
+
 ```
 fabmanager create-admin --app superset
 ```
+
+
 
 #### Initialize the database
 ```
@@ -229,6 +243,16 @@ superset runserver -d
 #### Explore Superset
 
 Create a connection to `dwh` in Sources > Databases
+
+To connect to your local mysql use in `SQLAlchemy URI` field the following path
+
+```
+mysql://[mysqluser]:[mysqlpassword]@host.docker.internal:3306/dwh
+```
+
+OK! You can now test the connection and move on
+
+
 
 
 

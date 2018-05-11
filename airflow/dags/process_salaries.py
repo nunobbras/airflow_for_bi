@@ -10,7 +10,7 @@ args = {
     'owner': 'airflow',
     'start_date': datetime(1950, 1, 1),
     'provide_context': True,
-    'depends_on_past': True
+    'depends_on_past': False
 }
 
 try:
@@ -21,7 +21,7 @@ try:
         dagrun_timeout=timedelta(minutes=60),
         template_searchpath=tmpl_search_path,
         default_args=args,
-        max_active_runs=1
+        max_active_runs=1000
     )
 
     process_salaries_operator = MysqlToMysqlOperator(
