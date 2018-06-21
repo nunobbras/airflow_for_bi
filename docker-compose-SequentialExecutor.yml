@@ -7,6 +7,9 @@ services:
             - POSTGRES_PASSWORD=airflow
             - POSTGRES_DB=airflow
 
+
+
+
     webserver:
         build: .
         restart: always
